@@ -1,17 +1,14 @@
-package org.example.taskbe.domain;
+package org.example.taskbe.domain.entity;
 
-import jakarta.annotation.Nullable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.boot.context.properties.bind.DefaultValue;
+import org.example.taskbe.domain.Priority;
+import org.example.taskbe.domain.Topic;
+import org.example.taskbe.domain.dto.TaskDto;
 
 import java.time.LocalDateTime;
 
@@ -19,11 +16,9 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
 public class TaskEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @NotNull
+    private Integer id;
     @NotNull
     private Topic topic;
     @NotBlank
@@ -32,7 +27,21 @@ public class TaskEntity {
     private LocalDateTime dueAt;
     @NotNull
     private boolean done;
+    @NotNull
     private LocalDateTime createdAt;
     @NotNull
     private Priority priority;
+
+    public static TaskEntity toEntity(TaskDto dto) {
+        return new TaskEntity(
+                dto.getId(),
+                dto.getTopic(),
+                dto.getTitle(),
+                dto.getDescription(),
+                dto.getDueAt(),
+                dto.isDone(),
+                dto.getCreatedAt(),
+                dto.getPriority()
+        );
+    }
 }
