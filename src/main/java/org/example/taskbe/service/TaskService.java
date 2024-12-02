@@ -31,4 +31,14 @@ public class TaskService {
     public List<TaskEntity> getTaskByTitle(String title) {
         return taskRepository.findByTitle(title);
     }
+
+    public TaskEntity editTask(TaskDto taskDto, int id) {
+        taskDto.setId(id);
+        taskDto.setCreatedAt(LocalDateTime.now());
+        return taskRepository.create(TaskEntity.toEntity(taskDto));
+    }
+
+    public void deleteTask(int id) {
+        taskRepository.delete(id);
+    }
 }

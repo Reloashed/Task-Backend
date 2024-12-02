@@ -12,7 +12,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -33,26 +32,26 @@ public class TaskControllerTest {
     @MockBean
     private TaskService taskService;
 
-    private TaskEntity getSampleTaskEntity() {
+    private TaskEntity createSampleTaskEntity() {
         return new TaskEntity(
                 1,
                 Topic.MATHEMATICS,
-                "Task 1",
-                "Description 1",
-                LocalDateTime.now().plusDays(1),
+                "Sample Task",
+                "A sample task description",
+                LocalDateTime.now().plusDays(3),
                 false,
                 LocalDateTime.now(),
                 Priority.CRITICAL
         );
     }
 
-    private TaskDto getSampleTaskDto() {
+    private TaskDto createSampleTaskDto() {
         return new TaskDto(
                 null,
                 Topic.MATHEMATICS,
-                "Task 1",
-                "Description 1",
-                LocalDateTime.now().plusDays(1),
+                "Sample Task",
+                "A sample task description",
+                LocalDateTime.now().plusDays(3),
                 false,
                 null,
                 Priority.CRITICAL
@@ -60,83 +59,114 @@ public class TaskControllerTest {
     }
 
     @Test
-    void testGetAllTasks() throws Exception {
-        List<TaskEntity> taskEntities = Arrays.asList(getSampleTaskEntity());
+    void shouldReturnAllTasks() throws Exception {
+        // Arrange
+        List<TaskEntity> taskEntities = List.of(createSampleTaskEntity());
         Mockito.when(taskService.getAllTasks()).thenReturn(taskEntities);
 
+        // Act & Assert
         mockMvc.perform(get("/api/v1/tasks")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].title").value("Task 1"));
+                .andExpect(jsonPath("$[0].title").value("Sample Task"));
     }
 
     @Test
-    void testGetTaskById() throws Exception {
-        Mockito.when(taskService.getById(eq(1))).thenReturn(Optional.of(getSampleTaskEntity()));
+    void shouldReturnTaskById() throws Exception {
+        // Arrange
+        Mockito.when(taskService.getById(eq(1))).thenReturn(Optional.of(createSampleTaskEntity()));
 
+        // Act & Assert
         mockMvc.perform(get("/api/v1/tasks/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.title").value("Task 1"));
+                .andExpect(jsonPath("$.title").value("Sample Task"));
     }
 
     @Test
-    void testGetTaskById_NotFound() throws Exception {
+    void shouldReturnNotFoundForNonexistentTaskById() throws Exception {
+        // Arrange
         Mockito.when(taskService.getById(eq(999))).thenReturn(Optional.empty());
 
+        // Act & Assert
         mockMvc.perform(get("/api/v1/tasks/999")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void testGetTaskByTitle() throws Exception {
-        List<TaskEntity> taskEntities = Arrays.asList(getSampleTaskEntity());
-        Mockito.when(taskService.getTaskByTitle(eq("Task 1"))).thenReturn(taskEntities);
+    void shouldReturnTasksByTitle() throws Exception {
+        // Arrange
+        List<TaskEntity> taskEntities = List.of(createSampleTaskEntity());
+        Mockito.when(taskService.getTaskByTitle(eq("Sample Task"))).thenReturn(taskEntities);
 
+        // Act & Assert
         mockMvc.perform(get("/api/v1/tasks/title")
-                        .param("title", "Task 1")
+                        .param("title", "Sample Task")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("Task 1"));
+                .andExpect(jsonPath("$[0].title").value("Sample Task"));
     }
 
     @Test
-    void testCreateTask() throws Exception {
-        Mockito.when(taskService.saveTask(any(TaskDto.class))).thenReturn(getSampleTaskEntity());
+    void shouldCreateTaskSuccessfully() throws Exception {
+        // Arrange
+        Mockito.when(taskService.saveTask(any(TaskDto.class))).thenReturn(createSampleTaskEntity());
 
+        // Act & Assert
         mockMvc.perform(post("/api/v1/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\n" +
-                                "  \"id\": null,\n" +
                                 "  \"topic\": \"MATHEMATICS\",\n" +
-                                "  \"title\": \"Task 1\",\n" +
-                                "  \"description\": \"Description 1\",\n" +
+                                "  \"title\": \"Sample Task\",\n" +
+                                "  \"description\": \"A sample task description\",\n" +
                                 "  \"dueAt\": \"2024-12-01T12:00:00\",\n" +
                                 "  \"done\": false,\n" +
-                                "  \"createdAt\": null,\n" +
                                 "  \"priority\": \"CRITICAL\"\n" +
                                 "}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.title").value("Task 1"));
+                .andExpect(jsonPath("$.title").value("Sample Task"));
     }
 
     @Test
-    void testCreateTask_returnsBadRequest() throws Exception {
-        Mockito.when(taskService.saveTask(any(TaskDto.class))).thenReturn(getSampleTaskEntity());
-
+    void shouldReturnBadRequestWhenCreatingTaskWithInvalidData() throws Exception {
+        // Act & Assert
         mockMvc.perform(post("/api/v1/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\n" +
-                                "  \"id\": null,\n" +
                                 "  \"dueAt\": \"2024-12-01T12:00:00\",\n" +
-                                "  \"done\": false,\n" +
-                                "  \"createdAt\": null,\n" +
-                                "  \"priority\": \"CRITICAL\"\n" +
+                                "  \"done\": false\n" +
                                 "}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldDeleteTaskSuccessfully() throws Exception {
+        // Act & Assert
+        mockMvc.perform(delete("/api/v1/tasks/1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldUpdateTaskSuccessfully() throws Exception {
+        // Arrange
+        Mockito.when(taskService.editTask(any(TaskDto.class), eq(1))).thenReturn(createSampleTaskEntity());
+
+        // Act & Assert
+        mockMvc.perform(put("/api/v1/tasks/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\n" +
+                                "  \"topic\": \"MATHEMATICS\",\n" +
+                                "  \"title\": \"Updated Task\",\n" +
+                                "  \"description\": \"Updated description\",\n" +
+                                "  \"dueAt\": \"2024-12-05T12:00:00\",\n" +
+                                "  \"done\": false,\n" +
+                                "  \"priority\": \"MAJOR\"\n" +
+                                "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Sample Task")); // Verify the mock response
     }
 }

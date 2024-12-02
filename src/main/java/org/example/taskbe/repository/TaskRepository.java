@@ -28,12 +28,25 @@ public class TaskRepository {
     }
 
     public TaskEntity create(TaskEntity taskEntity) {
-        taskEntity.setId(tasks.size());
-        tasks.add(taskEntity);
+        if (taskEntity.getId() == null || tasks.stream().filter(task -> task.getId().intValue() == taskEntity.getId().intValue()).toList().isEmpty()) {
+            taskEntity.setId(tasks.size());
+            tasks.add(taskEntity);
+        } else {
+            tasks.remove(taskEntity.getId().intValue());
+            tasks.add(taskEntity.getId(), taskEntity);
+        }
+
         return taskEntity;
     }
 
     public List<TaskEntity> findByTitle(String title) {
         return tasks.stream().filter(taskEntity -> taskEntity.getTitle().contains(title)).toList();
+    }
+
+    public void delete(int id) {
+        tasks.remove(id);
+        for (int i = 0; i < tasks.size(); i++) {
+            tasks.get(i).setId(i);
+        }
     }
 }

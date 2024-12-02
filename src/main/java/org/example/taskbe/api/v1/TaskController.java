@@ -49,6 +49,17 @@ public class TaskController {
                         taskService.saveTask(toSave)));
     }
 
+    @PutMapping("tasks/{id}")
+    public ResponseEntity<TaskDto> editTask(@Valid @RequestBody TaskDto toEdit, @PathVariable int id) {
+        return ResponseEntity.ok(TaskDto.toDto(taskService.editTask(toEdit, id)));
+    }
+
+    @DeleteMapping("tasks/{id}")
+    public ResponseEntity<?> deleteTask(@PathVariable int id) {
+        taskService.deleteTask(id);
+        return ResponseEntity.noContent().build();
+    }
+
     private List<TaskDto> toTaskDtoList(List<TaskEntity> taskDtos) {
         List<TaskDto> taskEntities = new ArrayList<>();
         taskDtos.forEach(taskDto -> {
